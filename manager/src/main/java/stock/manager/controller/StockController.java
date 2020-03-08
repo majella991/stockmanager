@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,11 +15,11 @@ import stock.manager.model.Product;
 
 @RestController
 public class StockController {
-	private static Map<Long, Product> stock = new HashMap<>();
+	private static Map<Long, Product> productRepo = new HashMap<>();
 
 	@RequestMapping(value = "/stock")
 	public ResponseEntity<Object> getProduct() {
-		return new ResponseEntity<>(stock.values(), HttpStatus.OK);
+		return new ResponseEntity<>(productRepo.values(), HttpStatus.OK);
 	}
 
 	/**
@@ -29,9 +30,14 @@ public class StockController {
 	 *         successfully
 	 */
 	@RequestMapping(value = "/stock", method = RequestMethod.POST)
-	public ResponseEntity<Object> insertProduct(@RequestBody String name) {
+	public ResponseEntity<String> insertProduct(@RequestBody String name) {
 		Product product = new Product(name);
-		stock.put(product.getId(), product);
+		productRepo.put(product.getId(), product);
 		return new ResponseEntity<>("Product has been created successfully", HttpStatus.CREATED);
+	}
+
+	@RequestMapping(value = "/stock/{id}")
+	public ResponseEntity<Product> getProduct(@PathVariable("id") Long id) {
+		return new ResponseEntity<>(productRepo.get(id), HttpStatus.OK);
 	}
 }

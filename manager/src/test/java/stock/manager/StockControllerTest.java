@@ -1,13 +1,9 @@
 package stock.manager;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,9 +23,7 @@ public class StockControllerTest extends AbstractTest {
 
 	@Test
 	public void getStock() throws Exception {
-		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders
-				.get("/stock")
-				.accept(MediaType.APPLICATION_JSON_VALUE))
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock").accept(MediaType.APPLICATION_JSON_VALUE))
 				.andReturn();
 
 		assertEquals(200, mvcResult.getResponse().getStatus());
@@ -43,14 +37,38 @@ public class StockControllerTest extends AbstractTest {
 		Product product = new Product("Soap");
 		String inputJson = super.mapToJson(product);
 		MvcResult mvcResult = mvc.perform(
-				MockMvcRequestBuilders
-				.post("/stock")
-				.contentType(MediaType.APPLICATION_JSON_VALUE)
-				.content(inputJson))
+				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
 				.andReturn();
 		assertEquals(201, mvcResult.getResponse().getStatus());
 		String content = mvcResult.getResponse().getContentAsString();
 		assertEquals(content, "Product has been created successfully");
+	}
+
+	@Test
+	public void getNoProduct() throws Exception {
+		MvcResult mvcResult = mvc
+				.perform(MockMvcRequestBuilders.get("/stock/0").accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+
+		assertEquals(200, mvcResult.getResponse().getStatus());
+		String content = mvcResult.getResponse().getContentAsString();
+		assertEquals("", content);
+	}
+	
+	@Test
+	public void getProduct() throws Exception {
+		Product product = new Product("Soap");
+		String inputJson = super.mapToJson(product);
+		mvc.perform(
+				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
+				.andReturn();
+
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock/0").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+
+		assertEquals(200, mvcResult.getResponse().getStatus());
+		String content = mvcResult.getResponse().getContentAsString();
+		Product productlist = super.mapFromJson(content, Product.class);
+		assertTrue(productlist.getId() == 0);
 	}
 
 }
