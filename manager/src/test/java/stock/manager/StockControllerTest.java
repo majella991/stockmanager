@@ -1,7 +1,8 @@
 package stock.manager;
 
-
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,32 +13,44 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import stock.manager.model.Product;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class StockControllerTest {
+public class StockControllerTest extends AbstractTest {
 
 	@Autowired
 	private MockMvc mvc;
 
 	@Test
-	public void getIndex() throws Exception {
-		mvc.perform(MockMvcRequestBuilders.get("/").accept(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(content().string(equalTo("Stock Manager")));
-	}
-	
-	@Test
 	public void getStock() throws Exception {
-		mvc.perform(MockMvcRequestBuilders.get("/stock").accept(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk());
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders
+				.get("/stock")
+				.accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+
+		assertEquals(200, mvcResult.getResponse().getStatus());
+		String content = mvcResult.getResponse().getContentAsString();
+		Product[] productlist = super.mapFromJson(content, Product[].class);
+		assertTrue(productlist.length > 0);
 	}
-	
+
 	@Test
 	public void insertProduct() throws Exception {
-		mvc.perform(MockMvcRequestBuilders.get("/insertProduct?name=soap").accept(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(content().json("{\"name\":\"soap\",\"quantity\":100}"));
+		Product product = new Product("Soap");
+		String inputJson = super.mapToJson(product);
+		MvcResult mvcResult = mvc.perform(
+				MockMvcRequestBuilders
+				.post("/stock")
+				.contentType(MediaType.APPLICATION_JSON_VALUE)
+				.content(inputJson))
+				.andReturn();
+		assertEquals(201, mvcResult.getResponse().getStatus());
+		String content = mvcResult.getResponse().getContentAsString();
+		assertEquals(content, "Product has been created successfully");
 	}
+
 }

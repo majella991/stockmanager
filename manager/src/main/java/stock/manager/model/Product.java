@@ -15,13 +15,23 @@ public class Product {
 	private String name;
 	
 	private Item[] stock;
+	
+	public Product() {
+		setQuantity(100);
+	}
 
+	public Product(String name) {
+		setName(name);
+		setQuantity(100);
+	}
+	
 	public Product(String name, int quantity) {
-		this.name = name;
-		this.stock = new Item[quantity];
-		for (int i = 0; i < quantity; i++) {
-			this.stock[i] = new Item();
-		}
+		setName(name);
+		setQuantity(quantity);
+	}
+
+	public Long getId() {
+		return id;
 	}
 
 	public String getName() {
@@ -35,5 +45,13 @@ public class Product {
 	public int getQuantity() {
 		return stock.length;
 	}
+	
+	private void setQuantity(int quantity) {
+		this.stock = new Item[quantity];
+		for (int i = 0; i < quantity; i++) {
+			this.stock[i] = new Item();
+		}
+	}
+
 
 }

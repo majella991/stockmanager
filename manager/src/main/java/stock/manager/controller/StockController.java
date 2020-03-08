@@ -1,31 +1,37 @@
 package stock.manager.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import stock.manager.model.Product;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 @RestController
 public class StockController {
-	@RequestMapping("/")
-	public String index() {
-		return "Stock Manager";
-	}
-	
-	/**
-	 * inserts a product with a certain quantity into the stock
-	 * @param name of the product
-	 * @param quantity of the product i.e. how many items to insert into the stock
-	 * @return the newly created product
-	 */
-	@GetMapping("/insertProduct")
-	public Product insertProduct(
-			@RequestParam(value = "name") String name, 
-			@RequestParam(value = "quantity", defaultValue = "100") int quantity) {
-		return new Product(name, quantity);
+	private static Map<Long, Product> stock = new HashMap<>();
+
+	@RequestMapping(value = "/stock")
+	public ResponseEntity<Object> getProduct() {
+		return new ResponseEntity<>(stock.values(), HttpStatus.OK);
 	}
 
+	/**
+	 * creates a product with 100 items and inserts it into the stock
+	 * 
+	 * @param name of the product
+	 * @return responseEntity with httpStatus 201 if product has been created
+	 *         successfully
+	 */
+	@RequestMapping(value = "/stock", method = RequestMethod.POST)
+	public ResponseEntity<Object> insertProduct(@RequestBody String name) {
+		Product product = new Product(name);
+		stock.put(product.getId(), product);
+		return new ResponseEntity<>("Product has been created successfully", HttpStatus.CREATED);
+	}
 }
