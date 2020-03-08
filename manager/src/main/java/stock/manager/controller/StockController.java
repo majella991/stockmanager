@@ -36,8 +36,34 @@ public class StockController {
 		return new ResponseEntity<>("Product has been created successfully", HttpStatus.CREATED);
 	}
 
+	/**
+	 * searches a product by its id and returns it
+	 * 
+	 * @param id of the product
+	 * @return product with the given id or empty response
+	 */
 	@RequestMapping(value = "/stock/{id}")
 	public ResponseEntity<Product> getProduct(@PathVariable("id") Long id) {
-		return new ResponseEntity<>(productRepo.get(id), HttpStatus.OK);
+		Product product = productRepo.get(id);
+		if (product == null) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(product, HttpStatus.FOUND);
+	}
+
+	/**
+	 * searches a product by its id and returns its stock information
+	 * 
+	 * @param id of the product
+	 * @return quantity of the product i.e. how many items are available in the
+	 *         stock
+	 */
+	@RequestMapping(value = "/stock/{id}/quantity")
+	public ResponseEntity<Integer> getProductQuantity(@PathVariable("id") Long id) {
+		Product product = productRepo.get(id);
+		if (product == null) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(product.getQuantity(), HttpStatus.FOUND);
 	}
 }

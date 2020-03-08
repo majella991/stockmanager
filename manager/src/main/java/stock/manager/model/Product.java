@@ -8,6 +8,8 @@ import javax.persistence.Id;
 @Entity
 public class Product {
 
+	private static final int DEFAULT_QUANTITY = 100;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
@@ -17,12 +19,12 @@ public class Product {
 	private Item[] stock;
 	
 	public Product() {
-		setQuantity(100);
+		setQuantity(DEFAULT_QUANTITY);
 	}
 
 	public Product(String name) {
 		setName(name);
-		setQuantity(100);
+		setQuantity(DEFAULT_QUANTITY);
 	}
 	
 	public Product(String name, int quantity) {
