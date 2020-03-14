@@ -19,43 +19,58 @@ import stock.manager.model.Product;
 @AutoConfigureMockMvc
 public class StockControllerTest extends AbstractTest {
 
-	private static final int DEFAULT_QUANTITY = 100;
+	private static final int INITIAL_STOCK = 100;
 
 	@Autowired
 	private MockMvc mvc;
 
 	@Test
-	public void getStock() throws Exception {
+	public void testGetNoStock() throws Exception {
 		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock").accept(MediaType.APPLICATION_JSON_VALUE))
 				.andReturn();
 
-		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
 		String content = mvcResult.getResponse().getContentAsString();
 		Product[] productlist = super.mapFromJson(content, Product[].class);
-		assertTrue(productlist.length > 0);
+		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
+		assertTrue(productlist.length == 0);
 	}
 
 	@Test
-	public void insertProduct() throws Exception {
+	public void testInsertProduct() throws Exception {
 		Product product = new Product("Soap");
 		String inputJson = super.mapToJson(product);
 		MvcResult mvcResult = mvc.perform(
 				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
 				.andReturn();
-		assertEquals(201, mvcResult.getResponse().getStatus());
 		String content = mvcResult.getResponse().getContentAsString();
-		assertEquals(content, "Product has been created successfully");
+		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
+		assertEquals(content, "Product has been added successfully.");
+	}
+	
+	@Test
+	public void testGetStock() throws Exception {
+		Product product = new Product("Coconut");
+		String inputJson = super.mapToJson(product);
+		MvcResult mvcResult = mvc.perform(
+				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
+				.andReturn();
+		mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+		String content = mvcResult.getResponse().getContentAsString();
+		Product[] productlist = super.mapFromJson(content, Product[].class);
+		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
+		assertTrue(productlist.length > 0);
 	}
 
 	@Test
-	public void getNoProduct() throws Exception {
+	public void testGetNoProduct() throws Exception {
 		MvcResult mvcResult = mvc
 				.perform(MockMvcRequestBuilders.get("/stock/1").accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
 		assertEquals(HttpStatus.NOT_FOUND.value(), mvcResult.getResponse().getStatus());
 	}
 
 	@Test
-	public void getProduct() throws Exception {
+	public void testGetProduct() throws Exception {
 		Product product = new Product("Soap");
 		String inputJson = super.mapToJson(product);
 		mvc.perform(
@@ -63,15 +78,15 @@ public class StockControllerTest extends AbstractTest {
 				.andReturn();
 		MvcResult mvcResult = mvc
 				.perform(MockMvcRequestBuilders.get("/stock/0").accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
-		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
 		String content = mvcResult.getResponse().getContentAsString();
 		product = super.mapFromJson(content, Product.class);
+		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
 		assertTrue(product.getId() == 0);
-		assertEquals(DEFAULT_QUANTITY, product.getQuantity());
+		assertEquals(INITIAL_STOCK, product.getQuantity());
 	}
 
 	@Test
-	public void getProductsQuantity() throws Exception {
+	public void testGetProductsQuantity() throws Exception {
 		Product product = new Product("Shampoo");
 		String inputJson = super.mapToJson(product);
 		mvc.perform(
@@ -80,9 +95,29 @@ public class StockControllerTest extends AbstractTest {
 		MvcResult mvcResult = mvc
 				.perform(MockMvcRequestBuilders.get("/stock/0/quantity").accept(MediaType.APPLICATION_JSON_VALUE))
 				.andReturn();
-		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
 		String content = mvcResult.getResponse().getContentAsString();
-		assertEquals("" + DEFAULT_QUANTITY, content);
+		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
+		assertEquals("" + INITIAL_STOCK, content);
+	}
+
+	@Test
+	public void testRefill() throws Exception {
+		int quantity = 50;
+		Product product = new Product("Lotion", quantity);
+		String inputJson = super.mapToJson(product);
+		mvc.perform(
+				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
+				.andReturn();
+		MvcResult mvcResult = mvc
+				.perform(MockMvcRequestBuilders.get("/stock/0/quantity").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+		String content = mvcResult.getResponse().getContentAsString();
+		assertEquals("" + quantity, content);
+		mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock/0/refill").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+		content = mvcResult.getResponse().getContentAsString();
+		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
+		assertEquals("" + INITIAL_STOCK, content);
 	}
 
 }

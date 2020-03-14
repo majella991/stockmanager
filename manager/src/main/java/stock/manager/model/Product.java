@@ -8,7 +8,7 @@ import javax.persistence.Id;
 @Entity
 public class Product {
 
-	private static final int DEFAULT_QUANTITY = 100;
+	private static final int INITIAL_STOCK = 100;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -19,12 +19,10 @@ public class Product {
 	private Item[] stock;
 	
 	public Product() {
-		setQuantity(DEFAULT_QUANTITY);
 	}
 
 	public Product(String name) {
 		setName(name);
-		setQuantity(DEFAULT_QUANTITY);
 	}
 	
 	public Product(String name, int quantity) {
@@ -45,14 +43,21 @@ public class Product {
 	}
 	
 	public int getQuantity() {
+		if (stock == null) {
+			refill();
+		}
 		return stock.length;
 	}
 	
-	private void setQuantity(int quantity) {
+	public void setQuantity(int quantity) {
 		this.stock = new Item[quantity];
 		for (int i = 0; i < quantity; i++) {
 			this.stock[i] = new Item();
 		}
+	}
+
+	public void refill() {
+		setQuantity(INITIAL_STOCK);
 	}
 
 

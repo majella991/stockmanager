@@ -23,17 +23,16 @@ public class StockController {
 	}
 
 	/**
-	 * creates a product with 100 items and inserts it into the stock
+	 * stores the product in a repository
 	 * 
-	 * @param name of the product
-	 * @return responseEntity with httpStatus 201 if product has been created
+	 * @param product
+	 * @return responseEntity with httpStatus 201 if product has been added
 	 *         successfully
 	 */
 	@RequestMapping(value = "/stock", method = RequestMethod.POST)
-	public ResponseEntity<String> insertProduct(@RequestBody String name) {
-		Product product = new Product(name);
+	public ResponseEntity<String> insertProduct(@RequestBody Product product) {
 		productRepo.put(product.getId(), product);
-		return new ResponseEntity<>("Product has been created successfully", HttpStatus.CREATED);
+		return new ResponseEntity<>("Product has been added successfully.", HttpStatus.OK);
 	}
 
 	/**
@@ -64,6 +63,23 @@ public class StockController {
 		if (product == null) {
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 		}
+		return new ResponseEntity<>(product.getQuantity(), HttpStatus.FOUND);
+	}
+	
+	/**
+	 * searches a product by its id and refills its stock
+	 * 
+	 * @param id of the product
+	 * @return quantity of the product i.e. how many items are available in the
+	 *         stock
+	 */
+	@RequestMapping(value = "/stock/{id}/refill")
+	public ResponseEntity<Integer> refill(@PathVariable("id") Long id) {
+		Product product = productRepo.get(id);
+		if (product == null) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		}
+		product.refill();
 		return new ResponseEntity<>(product.getQuantity(), HttpStatus.FOUND);
 	}
 }
