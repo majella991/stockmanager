@@ -2,6 +2,7 @@ package stock.manager.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,16 +67,16 @@ public class StockController {
 	 *         stock
 	 */
 	@GetMapping(value = "/stock/{id}/quantity")
-	public ResponseEntity<Integer> getProductQuantity(@PathVariable("id") Long id) {
+	public ResponseEntity<Long> getProductQuantity(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
 		return getQuantityResponse(product);
 	}
 	
-	private ResponseEntity<Integer> getQuantityResponse(Product product) {
+	private ResponseEntity<Long> getQuantityResponse(Product product) {
 		return new ResponseEntity<>(getOptionalQuantity(product), getStatus(product));
 	}
 	
-	private Integer getOptionalQuantity(Product product) {
+	private Long getOptionalQuantity(Product product) {
 		if (product != null) {
 			return product.getQuantity();
 		}
@@ -90,7 +91,7 @@ public class StockController {
 	 *         stock
 	 */
 	@GetMapping(value = "/stock/{id}/refill")
-	public ResponseEntity<Integer> refill(@PathVariable("id") Long id) {
+	public ResponseEntity<Long> refill(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
 		if (product == null) {
 			return getQuantityResponse(product);
@@ -108,16 +109,16 @@ public class StockController {
 	 *         stock
 	 */
 	@GetMapping(value = "/stock/{id}/buy")
-	public ResponseEntity<Integer> buy(@PathVariable("id") Long id) {
+	public ResponseEntity<Long> buy(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
 		if (product == null) {
 			return getQuantityResponse(product);
 		}
-		StockItem item = product.buy();
-		if (item == null) {
-			return new ResponseEntity<>(getOptionalQuantity(product), HttpStatus.NO_CONTENT);
+		Optional<StockItem> item = product.buy();
+		if (item.isPresent()) {
+			return getQuantityResponse(product);
 		}
-		return getQuantityResponse(product);
+		return new ResponseEntity<>(getOptionalQuantity(product), HttpStatus.FORBIDDEN);
 	}
 	
 

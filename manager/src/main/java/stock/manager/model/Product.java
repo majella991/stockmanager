@@ -2,6 +2,9 @@ package stock.manager.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -53,14 +56,12 @@ public class Product {
 	 * counts available items
 	 * @return number of available items
 	 */
-	public int getQuantity() {
-		int n = 0;
-		for (int i = 0; i < getStock().size(); i++) {
-			if (getStock().get(i).isAvailable()) {
-				n++;
-			}
-		}
-		return n;
+	public long getQuantity() {
+		return getAvailableItems().count();
+	}
+	
+	private Stream<StockItem> getAvailableItems() {
+		return getStock().parallelStream().filter(StockItem::isAvailable);
 	}
 
 	private List<StockItem> getStock() {
@@ -70,37 +71,31 @@ public class Product {
 		return stock; 
 	}
 
-	public void setQuantity(int quantity) {
-		int numberOfItemsToAdd = quantity - getQuantity();
+	public void setQuantity(long quantity) {
+		long numberOfItemsToAdd = quantity - getQuantity();
 		addItems(numberOfItemsToAdd);
 	}
 
-	private void addItems(int numberOfItemsToAdd) {
-		for (int i = 0; i < numberOfItemsToAdd; i++) {
-			getStock().add(new StockItem());
-		}
+	private void addItems(long numberOfItemsToAdd) {
+		getStock().addAll(Stream.generate(StockItem::new).limit(numberOfItemsToAdd).collect(Collectors.toList()));
 	}
 
 	public void refill() {
 		setQuantity(INITIAL_STOCK);
 	}
 
-	public StockItem buy() {
-		StockItem item = getAvailableItem();
-		if (item != null) {
-			item.setAvailable(false);
+	/**
+	 * buys an item of this product if there is still at least one available
+	 * @return an optional with the bought item if an item has been bought
+	 */
+	public Optional<StockItem> buy() {
+		Optional<StockItem> item = getAvailableItems().findAny();
+		if (item.isPresent()) {
+			item.get().setAvailable(false);
 		}
 		return item;
 	}
 
-	private StockItem getAvailableItem() {
-		for (StockItem item : getStock()) {
-			if (item.isAvailable()) {
-				return item;
-			}
-		}
-		return null;
-	}
 
 
 }

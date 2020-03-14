@@ -46,7 +46,7 @@ public class StockControllerTest extends AbstractTest {
 		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
 		assertEquals("Product has been added successfully.", content);
 	}
-	
+
 	@Test
 	public void testGetStock() throws Exception {
 		Product product = new Product("Coconut");
@@ -117,6 +117,30 @@ public class StockControllerTest extends AbstractTest {
 		content = mvcResult.getResponse().getContentAsString();
 		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
 		assertEquals("" + INITIAL_STOCK, content);
+	}
+
+	@Test
+	public void testBuyTooMany() throws Exception {
+		Product product = new Product("Lotion");
+		String inputJson = super.mapToJson(product);
+		mvc.perform(
+				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
+				.andReturn();
+		for (int i = 0; i < INITIAL_STOCK - 1; i++) {
+			mvc.perform(MockMvcRequestBuilders.get("/stock/0/buy").accept(MediaType.APPLICATION_JSON_VALUE))
+					.andReturn();
+		}
+		MvcResult mvcResult = mvc
+				.perform(MockMvcRequestBuilders.get("/stock/0/buy").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+		String content = mvcResult.getResponse().getContentAsString();
+		assertEquals(HttpStatus.FOUND.value(), mvcResult.getResponse().getStatus());
+		assertEquals("0", content);
+		mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock/0/buy").accept(MediaType.APPLICATION_JSON_VALUE))
+				.andReturn();
+		content = mvcResult.getResponse().getContentAsString();
+		assertEquals(HttpStatus.FORBIDDEN.value(), mvcResult.getResponse().getStatus());
+		assertEquals("0", content);
 	}
 
 }
