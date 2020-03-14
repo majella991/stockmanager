@@ -44,7 +44,7 @@ public class StockControllerTest extends AbstractTest {
 				.andReturn();
 		String content = mvcResult.getResponse().getContentAsString();
 		assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
-		assertEquals(content, "Product has been added successfully.");
+		assertEquals("Product has been added successfully.", content);
 	}
 	
 	@Test
@@ -101,18 +101,17 @@ public class StockControllerTest extends AbstractTest {
 	}
 
 	@Test
-	public void testRefill() throws Exception {
-		int quantity = 50;
-		Product product = new Product("Lotion", quantity);
+	public void testBuyAndRefill() throws Exception {
+		Product product = new Product("Lotion");
 		String inputJson = super.mapToJson(product);
 		mvc.perform(
 				MockMvcRequestBuilders.post("/stock").contentType(MediaType.APPLICATION_JSON_VALUE).content(inputJson))
 				.andReturn();
 		MvcResult mvcResult = mvc
-				.perform(MockMvcRequestBuilders.get("/stock/0/quantity").accept(MediaType.APPLICATION_JSON_VALUE))
+				.perform(MockMvcRequestBuilders.get("/stock/0/buy").accept(MediaType.APPLICATION_JSON_VALUE))
 				.andReturn();
 		String content = mvcResult.getResponse().getContentAsString();
-		assertEquals("" + quantity, content);
+		assertEquals("" + (INITIAL_STOCK - 1), content);
 		mvcResult = mvc.perform(MockMvcRequestBuilders.get("/stock/0/refill").accept(MediaType.APPLICATION_JSON_VALUE))
 				.andReturn();
 		content = mvcResult.getResponse().getContentAsString();

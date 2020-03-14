@@ -5,19 +5,21 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import stock.manager.model.StockItem;
+import stock.manager.transfer.ProductDTO;
 import stock.manager.model.Product;
 
 @RestController
 public class StockController {
 	private static Map<Long, Product> productRepo = new HashMap<>();
 
-	@RequestMapping(value = "/stock")
+	@GetMapping(value = "/stock")
 	public ResponseEntity<Object> getProduct() {
 		return new ResponseEntity<>(productRepo.values(), HttpStatus.OK);
 	}
@@ -29,8 +31,9 @@ public class StockController {
 	 * @return responseEntity with httpStatus 201 if product has been added
 	 *         successfully
 	 */
-	@RequestMapping(value = "/stock", method = RequestMethod.POST)
-	public ResponseEntity<String> insertProduct(@RequestBody Product product) {
+	@PostMapping(value = "/stock")
+	public ResponseEntity<String> insertProduct(@RequestBody ProductDTO productDto) {
+		Product product = new Product(productDto.getName());
 		productRepo.put(product.getId(), product);
 		return new ResponseEntity<>("Product has been added successfully.", HttpStatus.OK);
 	}
@@ -41,13 +44,18 @@ public class StockController {
 	 * @param id of the product
 	 * @return product with the given id or empty response
 	 */
-	@RequestMapping(value = "/stock/{id}")
+	@GetMapping(value = "/stock/{id}")
 	public ResponseEntity<Product> getProduct(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
+		HttpStatus status = getStatus(product);
+		return new ResponseEntity<>(product, status);
+	}
+
+	private HttpStatus getStatus(Product product) {
 		if (product == null) {
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			return HttpStatus.NOT_FOUND;
 		}
-		return new ResponseEntity<>(product, HttpStatus.FOUND);
+		return HttpStatus.FOUND;
 	}
 
 	/**
@@ -57,13 +65,21 @@ public class StockController {
 	 * @return quantity of the product i.e. how many items are available in the
 	 *         stock
 	 */
-	@RequestMapping(value = "/stock/{id}/quantity")
+	@GetMapping(value = "/stock/{id}/quantity")
 	public ResponseEntity<Integer> getProductQuantity(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
-		if (product == null) {
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		return getQuantityResponse(product);
+	}
+	
+	private ResponseEntity<Integer> getQuantityResponse(Product product) {
+		return new ResponseEntity<>(getOptionalQuantity(product), getStatus(product));
+	}
+	
+	private Integer getOptionalQuantity(Product product) {
+		if (product != null) {
+			return product.getQuantity();
 		}
-		return new ResponseEntity<>(product.getQuantity(), HttpStatus.FOUND);
+		return null;
 	}
 	
 	/**
@@ -73,13 +89,36 @@ public class StockController {
 	 * @return quantity of the product i.e. how many items are available in the
 	 *         stock
 	 */
-	@RequestMapping(value = "/stock/{id}/refill")
+	@GetMapping(value = "/stock/{id}/refill")
 	public ResponseEntity<Integer> refill(@PathVariable("id") Long id) {
 		Product product = productRepo.get(id);
 		if (product == null) {
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			return getQuantityResponse(product);
 		}
 		product.refill();
-		return new ResponseEntity<>(product.getQuantity(), HttpStatus.FOUND);
+		return getQuantityResponse(product);
 	}
+	
+	/**
+	 * searches a product by its id and reduces its stock by quantity (default: 1) items
+	 * 
+	 * @param id of the product
+	 * @param quantity 
+	 * @return quantity of the product i.e. how many items are still available in the
+	 *         stock
+	 */
+	@GetMapping(value = "/stock/{id}/buy")
+	public ResponseEntity<Integer> buy(@PathVariable("id") Long id) {
+		Product product = productRepo.get(id);
+		if (product == null) {
+			return getQuantityResponse(product);
+		}
+		StockItem item = product.buy();
+		if (item == null) {
+			return new ResponseEntity<>(getOptionalQuantity(product), HttpStatus.NO_CONTENT);
+		}
+		return getQuantityResponse(product);
+	}
+	
+
 }
