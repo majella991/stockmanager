@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -24,7 +25,7 @@ public class Product {
 
 	private String name;
 	
-	@OneToMany(targetEntity=StockItem.class, fetch=FetchType.EAGER)
+	@OneToMany(targetEntity=StockItem.class, fetch=FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<StockItem> stock; 
 	
 	public Product() {

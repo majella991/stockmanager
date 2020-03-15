@@ -14,6 +14,14 @@ public class StockItem {
 	
 	private long availableUntil;
 
+	public long getAvailableUntil() {
+		return availableUntil;
+	}
+
+	public void setAvailableUntil(long availableUntil) {
+		this.availableUntil = availableUntil;
+	}
+
 	public boolean isAvailable() {
 		if (availableUntil == 0) {
 			return true;
