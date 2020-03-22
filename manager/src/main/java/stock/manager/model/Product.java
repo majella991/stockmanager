@@ -97,6 +97,18 @@ public class Product {
 		return item;
 	}
 
+	/**
+	 * reserves an available item of this product for a certain amount of seconds
+	 * @param seconds
+	 * @return an optional with the reserved item if an item has been reserved
+	 */
+	public Optional<StockItem> reserve(int seconds) {
+		Optional<StockItem> item = getAvailableItems().findAny();
+		if (item.isPresent()) {
+			item.get().reserve(seconds);
+		}
+		return item;
+	}
 
 
 }

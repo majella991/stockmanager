@@ -11,30 +11,23 @@ public class StockItem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
-	
-	private long availableUntil;
 
-	public long getAvailableUntil() {
-		return availableUntil;
-	}
-
-	public void setAvailableUntil(long availableUntil) {
-		this.availableUntil = availableUntil;
-	}
+	private long availableFrom;
 
 	public boolean isAvailable() {
-		if (availableUntil == 0) {
-			return true;
-		}
-		return availableUntil > System.currentTimeMillis();
+		return availableFrom < System.currentTimeMillis();
 	}
 
 	public void setAvailable(boolean available) {
 		if (available) {
-			availableUntil = 0;
+			availableFrom = System.currentTimeMillis();
 		} else {
-			availableUntil = System.currentTimeMillis();
+			availableFrom = Long.MAX_VALUE;
 		}
+	}
+
+	public void reserve(int seconds) {
+		availableFrom = System.currentTimeMillis() + seconds*1000;
 	}
 
 }

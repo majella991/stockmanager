@@ -71,8 +71,8 @@ public class StockController {
 	 * searches a product by its name and returns its stock information
 	 * 
 	 * @param name of the product
-	 * @return quantity of the product i.e. how many items are available in the
-	 *         stock
+	 * @return quantity of the product i.e. how many items are currently available
+	 *         in the stock
 	 */
 	@GetMapping(value = "/stock/{name}/quantity")
 	public ResponseEntity<Long> getProductQuantity(@PathVariable("name") String name) {
@@ -92,11 +92,12 @@ public class StockController {
 	}
 
 	/**
-	 * searches a product by its name and refills its stock
+	 * searches a product by its name, counts how many items are currently available
+	 * (without reserved items) and refills its stock
 	 * 
 	 * @param name of the product
-	 * @return quantity of the product i.e. how many items are available in the
-	 *         stock
+	 * @return quantity of the product i.e. how many items are currently available
+	 *         in the stock
 	 */
 	@GetMapping(value = "/stock/{name}/refill")
 	public ResponseEntity<Long> refill(@PathVariable("name") String name) {
@@ -110,10 +111,9 @@ public class StockController {
 	}
 
 	/**
-	 * searches a product by its name and reduces its stock by quantity (default: 1)
-	 * items
+	 * searches a product by its name and reduces its stock by 1 item
 	 * 
-	 * @param name       of the product
+	 * @param name     of the product
 	 * @param quantity
 	 * @return quantity of the product i.e. how many items are still available in
 	 *         the stock
@@ -125,6 +125,28 @@ public class StockController {
 			return getQuantityResponse(product);
 		}
 		Optional<StockItem> item = product.buy();
+		product = productRepo.save(product);
+		if (item.isPresent()) {
+			return getQuantityResponse(product);
+		}
+		return new ResponseEntity<>(getOptionalQuantity(product), HttpStatus.FORBIDDEN);
+	}
+
+	/**
+	 * searches a product by its name and reduces its stock by one item temporarily
+	 * 
+	 * @param name    of the product
+	 * @param seconds to reserve an item of this product
+	 * @return quantity of the product i.e. how many items are still available in
+	 *         the stock
+	 */
+	@GetMapping(value = "/stock/{name}/reserve/{seconds}")
+	public ResponseEntity<Long> reserve(@PathVariable("name") String name, @PathVariable("seconds") int seconds) {
+		Product product = productRepo.findByName(name);
+		if (product == null) {
+			return getQuantityResponse(product);
+		}
+		Optional<StockItem> item = product.reserve(seconds);
 		product = productRepo.save(product);
 		if (item.isPresent()) {
 			return getQuantityResponse(product);
